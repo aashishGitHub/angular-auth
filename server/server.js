@@ -3,8 +3,11 @@ const app = express();
 const sqlite = require('sqlite3').verbose();
 
 const database = new sqlite.Database('demo');
+
+app.use(express.json());
+
 database.serialize(() => {
-  database.run(`CREATE TABLE User (
+  database.run(`CREATE TABLE IF NOT EXISTS User (
       Name TEXT NOT NULL,
       Email TEXT NOT NULL,
       ContactNumber TEXT NOT NULL,
@@ -12,28 +15,105 @@ database.serialize(() => {
       Edit TEXT NULL
     )`
   );
-  const stmt = database.prepare(`INSERT INTO User VALUES (?,?,?,?,?)`);
-  stmt.run('Jitendra Sabat','jitendra@gmail.com','7829831698','Bangalore','Edit');
-  stmt.run('Jayadev Sabat','jayadev@gmail.com','1234567890','Bhubaneswar','Edit1');
-  stmt.finalize();
 
-  database.each('SELECT rowid, Name, Email, ContactNumber, Address, Edit FROM User', (err,row) =>{
-    console.log("User : " + row.rowid, row.Name , row.Email, row.ContactNumber, row.Address, row.Edit);
+  let usersList = [];
+  database.each('SELECT rowid, Name, Email, ContactNumber, Address, Edit FROM User', (err,row) => {
+    usersList.push({
+      Id: row.rowid,
+      Name: row.Name,
+      Email: row.Email,
+      ContactNumber: row.ContactNumber,
+      Address: row.Address,
+      Edit: row.Edit
+    });
+  }, (err,row) => {
+    console.log(usersList);
   });
 });
 
-database.close();
+//database.close();
 
 app.get('/api/users', (req,res) => {
-  res.send([
-    {
-      Name: 'Jitendra Sabat',
-      Email: 'jitendra@gmail.com',
-      ContactNumber: '7829831698',
-      Address: 'Bangalore',
-      Edit: 'Edit'
-    }
-  ]);
+  let usersList = [];
+    database.each('SELECT rowid, Name, Email, ContactNumber, Address, Edit FROM User', (err,row) =>{
+      usersList.push({
+        Id: row.rowid,
+        Name: row.Name,
+        Email: row.Email,
+        ContactNumber: row.ContactNumber,
+        Address: row.Address,
+        Edit: row.Edit
+      });
+    },(error,row) => {
+      console.log(usersList);
+      res.send(usersList);
+    });
+});
+
+app.post('/api/users', (req,res) => {
+ const stmt = database.prepare(`INSERT INTO User VALUES (?,?,?,?,?)`);
+ stmt.run(req.body.Name,req.body.Email,req.body.ContactNumber,req.body.Address,req.body.Edit);
+ stmt.finalize();
+
+ let usersList = [];
+ database.each('SELECT rowid, Name, Email, ContactNumber, Address, Edit FROM User', (err,row) => {
+   usersList.push({
+     Id: row.rowid,
+     Name: row.Name,
+     Email: row.Email,
+     ContactNumber: row.ContactNumber,
+     Address: row.Address,
+     Edit: row.Edit
+   });
+ },(err,row) => {
+   console.log(usersList);
+   res.send(usersList);
+ });
+});
+
+app.put('/api/users/:Id',(req,res) => {
+  const stmt = database.prepare(`UPDATE User SET Name = ?,Email = ?,ContactNumber = ?,
+                                                 Address = ?,Edit = ? WHERE rowid = ?`);
+  stmt.run(req.body.Name,req.body.Email,req.body.ContactNumber,req.body.Address,req.body.Edit,req.params.Id);
+  stmt.finalize();
+  res.status(200).send(`User ${req.body.Name} updated successfully`);
+
+  let usersList = [];
+  database.each('SELECT rowid, Name, Email, ContactNumber, Address, Edit FROM User', (err,row) => {
+    usersList.push({
+      Id: row.rowid,
+      Name: row.Name,
+      Email: row.Email,
+      ContactNumber: row.ContactNumber,
+      Address: row.Address,
+      Edit: row.Edit
+    });
+  }, (err,row) => {
+    console.log(usersList);
+    res.send(usersList);
+  });
+});
+
+app.delete('/api/users/:Id',(req,res) => {
+  const stmt = database.prepare(`DELETE FROM User WHERE rowid=?`);
+  stmt.run(req.params.Id);
+  stmt.finalize();
+
+  res.status(200).send(`User ${user.Name} deleted successfully`);
+  usersList = [];
+  database.each('SELECT rowid, Name, Email, ContactNumber, Address, Edit FROM User', (err,row) => {
+    usersList.push({
+      Id: row.rowid,
+      Name: row.Name,
+      Email: row.Email,
+      ContactNumber: row.ContactNumber,
+      Address: row.Address,
+      Edit: row.Edit
+    });
+  },(err,row) => {
+    console.log(usersList);
+    res.send(usersList);
+  });
 });
 
 //Port
