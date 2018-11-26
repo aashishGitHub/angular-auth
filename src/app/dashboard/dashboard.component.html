@@ -1,3 +1,20 @@
-<p>
-  dashboard works!
-</p>
+<table class="table">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">Id</th>
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Contact Number</th>
+        <th scope="col">Address</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor='let user of usersList'>
+        <td>{{ user.Id }}</td>
+        <td>{{ user.Name }}</td>
+        <td>{{ user.Email }}</td>
+        <td>{{ user.ContactNumber }}</td>
+        <td>{{ user.Address }}</td>
+      </tr>      
+    </tbody>
+  </table>
