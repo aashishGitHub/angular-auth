@@ -18,4 +18,7 @@ export class DashboardComponent implements OnInit {
                             console.log(this.usersList);
                           });
   }
+  editUser(user) {
+    console.log(user);
+  }
 }
